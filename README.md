@@ -1,14 +1,14 @@
 # Code Pusher
 
-**Code Pusher** is a Visual Studio Code extension that automatically commits and pushes changes to your Git repository at regular intervals. Perfect for developers who want to keep their code backed up and synced to remote repositories with minimal effort.
+**Code Pusher** is a Visual Studio Code extension that automatically commits your code changes at regular intervals. Perfect for developers who want to keep their code backed up and synced to remote repositories with minimal effort. This also helps make the Github Contribution Graph look more active.
 
 ## Features
 
 - **Automatic Git Commits**: Automatically commit changes to your local repository.
-- **Automatic Git Push**: Push changes to your remote repository after committing.
-- **Customizable Interval**: Set the interval (in minutes) for auto-committing and pushing changes.
+- **Automatic Git Push**: Push changes to your remote repository after finishing the commits.
+- **Customizable Interval**: Set the interval (in minutes) for auto-committing.
 - **Custom Git Configuration**: Configure remote and branch names for pushing code to your preferred repository and branch.
-- **Start/Stop Control**: Easily start and stop the auto-commit and push process using VS Code commands.
+- **Start/Stop Control**: Easily start and stop the auto-commit using VS Code commands.
 
 ## Installation
 
@@ -26,15 +26,15 @@ code --install-extension <your-extension-id>
 
 The extension automatically activates when you run the provided commands or when configured settings are applied.
 
-### Start Auto-Commit and Push
+### Start Auto-Commit
 
-To begin auto-committing and pushing, you can run the following command from the **Command Palette** (`Ctrl + Shift + P` or `Cmd + Shift + P` on macOS):
-- **Start Pushing Code**
+To begin auto-committing, you can run the following command from the **Command Palette** (`Ctrl + Shift + P` or `Cmd + Shift + P` on macOS):
+- **Start Committing Code**
 
-### Stop Auto-Commit and Push
+### Stop Auto-Commit
 
-To stop the auto-commit and push process, run:
-- **Stop Pushing Code**
+To stop the auto-commit, run:
+- **Stop Committing Code**
 
 ## Extension Settings
 
@@ -56,13 +56,13 @@ Example of configuring settings in `settings.json`:
 ## How It Works
 
 1. **Auto-Commit**: The extension automatically commits any changes to the local Git repository at the specified interval.
-2. **Auto-Push**: After committing, the extension pushes the changes to the configured remote repository and branch.
+2. **Auto-Push**: After Stopping the Auto-Commit, the extension asks if user wants to push the code to remote repository or not, if yes, then it pushes the changes to the configured remote repository and branch.
 3. **Logging**: Every commit and push action is logged for your reference.
 
 ## Commands
 
-- **Start Pushing Code**: Begins the auto-commit and push process.
-- **Stop Pushing Code**: Stops the auto-commit and push process.
+- **Start Committing Code**: Begins the auto-commit and push process.
+- **Stop Committing Code**: Stops the auto-commit and push process.
 
 These commands are available through the **Command Palette** (`Ctrl+Shift+P` or `Cmd+Shift+P`), or you can add keybindings for them.
 
@@ -73,7 +73,6 @@ These commands are available through the **Command Palette** (`Ctrl+Shift+P` or 
 
 ## Known Issues
 
-- The extension currently does not check if there are changes before committing. If there are no changes in the repository, it will still attempt to commit and push.
 - Make sure the repository is initialized (`git init`) and the remote is configured correctly.
 
 ## Release Notes
@@ -82,7 +81,7 @@ These commands are available through the **Command Palette** (`Ctrl+Shift+P` or 
 
 - Initial release with basic auto-commit and push functionality.
 - Added configuration for interval, remote, and branch.
-- Basic start and stop commands for controlling the commit and push process.
+- Basic start and stop commands for controlling the commit.
 
 ## Contributing
 
