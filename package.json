@@ -4,7 +4,7 @@
   "publisher": "harshmax",
   "description": "",
   "icon": "images/logo.png",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.96.0"
   },
