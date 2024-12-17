@@ -16,12 +16,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "codePusher.startPushingCode",
-        "title": "Start Pushing Code"
+        "command": "codePusher.startCommittingCode",
+        "title": "Start Committing Code"
       },
       {
-        "command": "codePusher.stopPushingCode",
-        "title": "Stop Pushing Code"
+        "command": "codePusher.stopCommittingCode",
+        "title": "Stop Committing Code"
       }
     ],
     "configuration": {
@@ -31,7 +31,7 @@
         "codePusher.timeGapInMinutes": {
           "type": "number",
           "default": 30,
-          "description": "Interval in minutes for auto-committing and pushing changes."
+          "description": "Interval in minutes for auto-committing changes."
         },
         "codePusher.remoteName": {
           "type": "string",

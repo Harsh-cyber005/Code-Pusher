@@ -60,24 +60,50 @@ Files Changed:\n${changedFiles || 'No files changed'}
     fs.appendFileSync(logPath, logEntry, 'utf8');
 }
 
-async function pushCode(timeGapInMinutes: number, logDir: string, remote: string, branch: string) {
+async function logPushStatus(
+	logDir: string,
+	status: string
+) {
+	const logPath = path.join(logDir, LOG_FILE_NAME);
+	const now = new Date().toLocaleString();
+
+	const logEntry = `Date/Time: ${now}
+Status: ${status}
+------------------------------------------------\n`;
+
+	fs.appendFileSync(logPath, logEntry, 'utf8');
+}
+
+async function pushCode(remote: string, branch: string, logDir: string) {
+	try {
+		await git.push(remote, branch);
+		logPushStatus(logDir, 'Success');
+		vscode.window.showInformationMessage('Code pushed successfully');
+	} catch (error) {
+		logPushStatus(logDir, 'Failed');
+		vscode.window.showErrorMessage(`Failed to push code: ${error}`);
+		vscode.window.showInformationMessage('Current remote and branch are: ' + remote + ' ' + branch, 'please change them in settings and try again');
+		console.error(error);
+	}
+}
+
+async function commitCode(timeGapInMinutes: number, logDir: string) {
 	try {
 		const commitMessage = await generateCommitMessage();
 		const hasChanges = await checkChanges();
 		const changedFiles = await git.diff(['--name-only']);
 		if (!hasChanges) {
-			vscode.window.showInformationMessage(`No changes to push right now, will check again after ${timeGapInMinutes} ${timeGapInMinutes === 1?"minute":"minutes"}`);
+			vscode.window.showInformationMessage(`No changes to commit right now, will check again after ${timeGapInMinutes} ${timeGapInMinutes === 1?"minute":"minutes"}`);
 			return;
 		}
 		await git.add('.');
 		await git.commit(commitMessage);
-		await git.push(remote, branch);
+		// await git.push(remote, branch);
 		logCommitStatus(logDir, 'Success', commitMessage, changedFiles);
-		vscode.window.showInformationMessage(`Code pushed successfully with message: ${commitMessage}`);
+		vscode.window.showInformationMessage(`Code committed successfully with message: ${commitMessage}`);
 	} catch (error) {
-		logCommitStatus(logDir, 'Failed', 'Failed to push code', '');
-		vscode.window.showErrorMessage(`Failed to push code: ${error}`);
-		vscode.window.showInformationMessage(`Current upstream name: ${remote} ${branch}, please check if it is correct and change it in settings`);
+		logCommitStatus(logDir, 'Failed', 'Failed to commit code', '');
+		vscode.window.showErrorMessage(`Failed to commit code: ${error}`);
 		console.error(error);
 	}
 }
@@ -86,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "code-pusher" is now active!');
 	let interval: NodeJS.Timeout;
 	let timeGapInMinutes: number = 0.2;
-	const disposable = vscode.commands.registerCommand('codePusher.startPushingCode', async () => {
+	const disposable = vscode.commands.registerCommand('codePusher.startCommittingCode', async () => {
 		vscode.window.showInformationMessage("Checking if there is a git repository present in the root directory or not....");
 		await sleep(2000);
 		const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -104,28 +130,36 @@ export function activate(context: vscode.ExtensionContext) {
 		if (!fs.existsSync(logDir)) {
 			fs.mkdirSync(logDir);
 		}
-		vscode.window.showInformationMessage('starting to push code to github ...');
+		vscode.window.showInformationMessage('starting to commit ...');
 		await sleep(1000);
 		vscode.window.showInformationMessage(`saving logs to ${logDir}`);
 		git = simpleGit(rootPath);
 		timeGapInMinutes = vscode.workspace.getConfiguration().get<number>('codePusher.timeGapInMinutes') || 30;
-		let remote = vscode.workspace.getConfiguration().get<string>('codePusher.remoteName') || 'origin';
-		if (!remote) {
-			vscode.window.showErrorMessage("Please provide the upstream name");
-			return;
-		}
-		let branch = vscode.workspace.getConfiguration().get<string>('codePusher.branchName') || 'master';
-		if (!branch) {
-			vscode.window.showErrorMessage("Please provide the branch name");
-			return;
-		}
 		interval = setInterval(async () => {
-			await pushCode(timeGapInMinutes, logDir, remote, branch);
+			await commitCode(timeGapInMinutes, logDir);
 		}, timeGapInMinutes * 60 * 1000);
 	});
 	context.subscriptions.push(disposable);
 
-	const stopDisposable = vscode.commands.registerCommand('codePusher.stopPushingCode', () => {
+	const stopDisposable = vscode.commands.registerCommand('codePusher.stopCommittingCode', async () => {
+		// ask if they want to push the code before stopping
+		const push = await vscode.window.showInputBox({
+			placeHolder: 'Do you want to push the code before stopping? (yes/no)'
+		});
+		if (push?.toLowerCase() === 'yes' || push?.toLowerCase() === 'y') {
+			const remote = vscode.workspace.getConfiguration().get<string>('codePusher.remoteName') || 'origin';
+			if (!remote) {
+				vscode.window.showErrorMessage("Please provide the upstream name");
+				return;
+			}
+			const branch = vscode.workspace.getConfiguration().get<string>('codePusher.branchName') || 'master';
+			if (!branch) {
+				vscode.window.showErrorMessage("Please provide the branch name");
+				return;
+			}
+			await pushCode(remote, branch, '');
+			await sleep(2000);
+		}
 		clearInterval(interval);
 		vscode.window.showInformationMessage('Code pushing stopped!');
 	});
