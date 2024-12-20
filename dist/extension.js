@@ -5677,7 +5677,7 @@ function activate(context) {
   const instantPushDisposable = vscode.commands.registerCommand("codePusher.instantPush", async () => {
     let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : void 0;
     const folderName = await getFolderName();
-    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher");
+    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher", folderName);
     let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : "";
     let gitPath = `${rootPath}/.git`;
     if (!gitExists) {
