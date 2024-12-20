@@ -9,7 +9,12 @@ const LOG_FILE_NAME = 'code-pusher.log';
 let gitExists = false;
 
 async function getFolderName(): Promise<string> {
-	
+	const workspaceFolders = vscode.workspace.workspaceFolders;
+	if (!workspaceFolders) {
+		return '';
+	}
+	const folder = workspaceFolders[0];
+	return folder.name;
 }
 
 async function generateCommitMessage(): Promise<string> {
