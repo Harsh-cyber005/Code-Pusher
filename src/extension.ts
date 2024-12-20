@@ -61,7 +61,7 @@ async function logCommitStatus(
 ) {
 	const logPath = path.join(logDir, LOG_FILE_NAME);
 	const now = new Date().toLocaleString();
-	
+
 	const logEntry = `Date/Time: ${now}
 Status: ${status}
 Commit Message: ${message}
@@ -146,7 +146,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let timeGapInMinutes: number = 0.2;
 	const disposable = vscode.commands.registerCommand('codePusher.startCommittingCode', async () => {
 		let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : undefined;
-		let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher');
+		let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher', getFolderName());
 		let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : '';
 		let gitPath = `${rootPath}/.git`;
 		if (!gitExists) {

@@ -5481,6 +5481,14 @@ var import_timers = require("timers");
 var git;
 var LOG_FILE_NAME = "code-pusher.log";
 var gitExists = false;
+async function getFolderName() {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    return "";
+  }
+  const folder = workspaceFolders[0];
+  return folder.name;
+}
 async function generateCommitMessage() {
   try {
     const changedFiles = await git.diff(["--name-only"]);
@@ -5588,7 +5596,7 @@ function activate(context) {
   let timeGapInMinutes = 0.2;
   const disposable = vscode.commands.registerCommand("codePusher.startCommittingCode", async () => {
     let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : void 0;
-    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher");
+    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher", getFolderName());
     let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : "";
     let gitPath = `${rootPath}/.git`;
     if (!gitExists) {
