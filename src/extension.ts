@@ -8,6 +8,8 @@ let git: SimpleGit;
 const LOG_FILE_NAME = 'code-pusher.log';
 let gitExists = false;
 
+async function get
+
 async function generateCommitMessage(): Promise<string> {
 	try {
 		const changedFiles = await git.diff(['--name-only']);
