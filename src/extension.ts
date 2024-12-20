@@ -212,6 +212,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (!fs.existsSync(logDir)) {
 			fs.mkdirSync(logDir);
 		}
+		git = simpleGit(rootPath);
 		await instantCommitCode(logDir);
 	});
 	context.subscriptions.push(instantCommitDisposable);
@@ -247,6 +248,7 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage("Please provide the branch name");
 			return;
 		}
+		git = simpleGit(rootPath);
 		await pushCode(remote, branch, logDir);
 	});
 	context.subscriptions.push(instantPushDisposable);
