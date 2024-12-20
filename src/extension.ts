@@ -61,7 +61,7 @@ async function logCommitStatus(
 ) {
 	const logPath = path.join(logDir, LOG_FILE_NAME);
 	const now = new Date().toLocaleString();
-
+	
 	const logEntry = `Date/Time: ${now}
 Status: ${status}
 Commit Message: ${message}
