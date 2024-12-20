@@ -5650,7 +5650,8 @@ function activate(context) {
   context.subscriptions.push(stopDisposable);
   const instantCommitDisposable = vscode.commands.registerCommand("codePusher.instantCommit", async () => {
     let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : void 0;
-    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher");
+    const folderName = await getFolderName();
+    let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || "", ".code-pusher", folderName);
     let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : "";
     let gitPath = `${rootPath}/.git`;
     if (!gitExists) {
