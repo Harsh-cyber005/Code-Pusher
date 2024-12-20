@@ -8,7 +8,7 @@ let git: SimpleGit;
 const LOG_FILE_NAME = 'code-pusher.log';
 let gitExists = false;
 
-async function get
+async function getFolderName
 
 async function generateCommitMessage(): Promise<string> {
 	try {
