@@ -36,6 +36,18 @@ To begin auto-committing, you can run the following command from the **Command P
 To stop the auto-commit, run:
 - **Stop Committing Code**
 
+After stopping the auto-commit, the extension will ask if you want to push the changes to the remote repository. If you choose to push, the changes will be pushed to the configured remote and branch.
+
+### Manual Commit
+
+To commit manually, run:
+- **Commit Now**
+
+### Manual Push
+
+To push manually, run:
+- **Push Now**
+
 ## Extension Settings
 
 You can configure the following settings to customize the behavior of the extension:
@@ -58,11 +70,14 @@ Example of configuring settings in `settings.json`:
 1. **Auto-Commit**: The extension automatically commits any changes to the local Git repository at the specified interval.
 2. **Auto-Push**: After Stopping the Auto-Commit, the extension asks if user wants to push the code to remote repository or not, if yes, then it pushes the changes to the configured remote repository and branch.
 3. **Logging**: Every commit and push action is logged for your reference.
+4. **Manual Control**: You can manually commit or push your code using the provided commands.
 
 ## Commands
 
 - **Start Committing Code**: Begins the auto-commit and push process.
 - **Stop Committing Code**: Stops the auto-commit and push process.
+- **Commit Now**: Manually commits the code changes.
+- **Push Now**: Manually pushes the committed changes to the remote repository.
 
 These commands are available through the **Command Palette** (`Ctrl+Shift+P` or `Cmd+Shift+P`), or you can add keybindings for them.
 
