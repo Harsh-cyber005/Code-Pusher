@@ -2,31 +2,33 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import * as path from 'path';
 import { simpleGit, SimpleGit } from 'simple-git';
+import { setTimeout } from 'timers';
 
 let git: SimpleGit;
 const LOG_FILE_NAME = 'code-pusher.log';
+let gitExists = false;
 
 async function generateCommitMessage(): Promise<string> {
 	try {
 		const changedFiles = await git.diff(['--name-only']);
-        const shortStat = await git.diff(['--shortstat']);
+		const shortStat = await git.diff(['--shortstat']);
 
-        const files = changedFiles.split('\n').filter(Boolean).slice(0, 3);
-        let message = files.map((file) => file.split('/').pop()).join(', ') || 'Code update';
+		const files = changedFiles.split('\n').filter(Boolean).slice(0, 3);
+		let message = files.map((file: string) => file.split('/').pop()).join(', ') || 'Code update';
 
-        if (shortStat) {
-            const changesSummary = shortStat.replace(/\n/g, '').trim();
-            message += ` (${changesSummary})`;
-        }
+		if (shortStat) {
+			const changesSummary = shortStat.replace(/\n/g, '').trim();
+			message += ` (${changesSummary})`;
+		}
 
-        return message;
+		return message;
 	} catch (error) {
 		return "Code update";
 	}
 }
 
 function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function checkChanges() {
@@ -43,21 +45,21 @@ async function checkChanges() {
 }
 
 async function logCommitStatus(
-    logDir: string,
-    status: string,
-    message: string,
-    changedFiles: string
+	logDir: string,
+	status: string,
+	message: string,
+	changedFiles: string
 ) {
-    const logPath = path.join(logDir, LOG_FILE_NAME);
-    const now = new Date().toLocaleString();
+	const logPath = path.join(logDir, LOG_FILE_NAME);
+	const now = new Date().toLocaleString();
 
-    const logEntry = `Date/Time: ${now}
+	const logEntry = `Date/Time: ${now}
 Status: ${status}
 Commit Message: ${message}
 Files Changed:\n${changedFiles || 'No files changed'}
 ------------------------------------------------\n`;
 
-    fs.appendFileSync(logPath, logEntry, 'utf8');
+	fs.appendFileSync(logPath, logEntry, 'utf8');
 }
 
 async function logPushStatus(
@@ -93,7 +95,28 @@ async function commitCode(timeGapInMinutes: number, logDir: string) {
 		const hasChanges = await checkChanges();
 		const changedFiles = await git.diff(['--name-only']);
 		if (!hasChanges) {
-			vscode.window.showInformationMessage(`No changes to commit right now, will check again after ${timeGapInMinutes} ${timeGapInMinutes === 1?"minute":"minutes"}`);
+			vscode.window.showInformationMessage(`No changes to commit right now, will check again after ${timeGapInMinutes} ${timeGapInMinutes === 1 ? "minute" : "minutes"}`);
+			return;
+		}
+		await git.add('.');
+		await git.commit(commitMessage);
+		// await git.push(remote, branch);
+		logCommitStatus(logDir, 'Success', commitMessage, changedFiles);
+		vscode.window.showInformationMessage(`Code committed successfully with message: ${commitMessage}`);
+	} catch (error) {
+		logCommitStatus(logDir, 'Failed', 'Failed to commit code', '');
+		vscode.window.showErrorMessage(`Failed to commit code: ${error}`);
+		console.error(error);
+	}
+}
+
+async function instantCommitCode(logDir: string) {
+	try {
+		const commitMessage = await generateCommitMessage();
+		const hasChanges = await checkChanges();
+		const changedFiles = await git.diff(['--name-only']);
+		if (!hasChanges) {
+			vscode.window.showInformationMessage(`No changes to commit right now`);
 			return;
 		}
 		await git.add('.');
@@ -113,20 +136,23 @@ export function activate(context: vscode.ExtensionContext) {
 	let interval: NodeJS.Timeout;
 	let timeGapInMinutes: number = 0.2;
 	const disposable = vscode.commands.registerCommand('codePusher.startCommittingCode', async () => {
-		vscode.window.showInformationMessage("Checking if there is a git repository present in the root directory or not....");
-		await sleep(2000);
-		const workspaceFolders = vscode.workspace.workspaceFolders;
-		if (!workspaceFolders) {
-			vscode.window.showErrorMessage("No workspace is opened");
-			return;
+		let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : undefined;
+		let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher');
+		let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : '';
+		let gitPath = `${rootPath}/.git`;
+		if (!gitExists) {
+			vscode.window.showInformationMessage("Checking if there is a git repository present in the root directory or not....");
+			await sleep(2000);
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage("No workspace is opened");
+				return;
+			}
+			if (!fs.existsSync(gitPath)) {
+				vscode.window.showErrorMessage("No git repository found in the root directory");
+				return;
+			}
 		}
-		const rootPath = workspaceFolders[0].uri.fsPath;
-		const gitPath = `${rootPath}/.git`;
-		const logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher');
-		if (!fs.existsSync(gitPath)) {
-			vscode.window.showErrorMessage("No git repository found in the root directory");
-			return;
-		}
+		gitExists = true;
 		if (!fs.existsSync(logDir)) {
 			fs.mkdirSync(logDir);
 		}
@@ -164,6 +190,66 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Code pushing stopped!');
 	});
 	context.subscriptions.push(stopDisposable);
+
+	const instantCommitDisposable = vscode.commands.registerCommand('codePusher.instantCommit', async () => {
+		let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : undefined;
+		let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher');
+		let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : '';
+		let gitPath = `${rootPath}/.git`;
+		if (!gitExists) {
+			vscode.window.showInformationMessage("Checking if there is a git repository present in the root directory or not....");
+			await sleep(2000);
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage("No workspace is opened");
+				return;
+			}
+			if (!fs.existsSync(gitPath)) {
+				vscode.window.showErrorMessage("No git repository found in the root directory");
+				return;
+			}
+		}
+		gitExists = true;
+		if (!fs.existsSync(logDir)) {
+			fs.mkdirSync(logDir);
+		}
+		await instantCommitCode(logDir);
+	});
+	context.subscriptions.push(instantCommitDisposable);
+
+	const instantPushDisposable = vscode.commands.registerCommand('codePusher.instantPush', async () => {
+		let workspaceFolders = vscode.workspace.workspaceFolders ? [...vscode.workspace.workspaceFolders] : undefined;
+		let logDir = path.join(process.env.HOME || process.env.USERPROFILE || process.env.PWD || '', '.code-pusher');
+		let rootPath = workspaceFolders ? workspaceFolders[0].uri.fsPath : '';
+		let gitPath = `${rootPath}/.git`;
+		if (!gitExists) {
+			vscode.window.showInformationMessage("Checking if there is a git repository present in the root directory or not....");
+			await sleep(2000);
+			if (!workspaceFolders) {
+				vscode.window.showErrorMessage("No workspace is opened");
+				return;
+			}
+			if (!fs.existsSync(gitPath)) {
+				vscode.window.showErrorMessage("No git repository found in the root directory");
+				return;
+			}
+		}
+		gitExists = true;
+		if (!fs.existsSync(logDir)) {
+			fs.mkdirSync(logDir);
+		}
+		const remote = vscode.workspace.getConfiguration().get<string>('codePusher.remoteName') || 'origin';
+		if (!remote) {
+			vscode.window.showErrorMessage("Please provide the upstream name");
+			return;
+		}
+		const branch = vscode.workspace.getConfiguration().get<string>('codePusher.branchName') || 'master';
+		if (!branch) {
+			vscode.window.showErrorMessage("Please provide the branch name");
+			return;
+		}
+		await pushCode(remote, branch, logDir);
+	});
+	context.subscriptions.push(instantPushDisposable);
 }
 
 export function deactivate() {

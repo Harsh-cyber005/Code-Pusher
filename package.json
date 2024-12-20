@@ -22,6 +22,14 @@
       {
         "command": "codePusher.stopCommittingCode",
         "title": "Stop Committing Code"
+      },
+      {
+        "command": "codePusher.instantCommit",
+        "title": "Commit Now"
+      },
+      {
+        "command": "codePusher.instantPush",
+        "title": "Push Now"
       }
     ],
     "configuration": {
